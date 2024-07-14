@@ -1,0 +1,44 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameters
+Ne = 800
+Ni = 200
+
+# Random values
+re = np.random.rand(Ne, 1)
+ri = np.random.rand(Ni, 1)
+
+# Neuron parameters
+a = np.concatenate((0.02 * np.ones((Ne, 1)), 0.02 + 0.08 * ri), axis=0)
+b = np.concatenate((0.2 * np.ones((Ne, 1)), 0.25 - 0.05 * ri), axis=0)
+c = np.concatenate((-65 + 15 * re**2, -65 * np.ones((Ni, 1))), axis=0)
+d = np.concatenate((8 - 6 * re**2, 2 * np.ones((Ni, 1))), axis=0)
+
+# Synaptic weights
+S = np.concatenate((0.5 * np.random.rand(Ne + Ni, Ne), -np.random.rand(Ne + Ni, Ni)), axis=1)
+
+# Initial values
+v = -65 * np.ones((Ne + Ni, 1))
+u = b * v
+
+firings = []
+
+# Simulation
+for t in range(1000):
+    I = np.concatenate((5 * np.random.randn(Ne, 1), 2 * np.random.randn(Ni, 1)), axis=0)
+    fired = np.where(v >= 30)[0]
+    if len(fired) > 0:
+        firings.extend([[t, neuron] for neuron in fired])
+    v[fired] = c[fired]
+    u[fired] = u[fired] + d[fired]
+    I = I + np.sum(S[:, fired], axis=1, keepdims=True)
+    v = v + 0.5 * (0.04 * v**2 + 5 * v + 140 - u + I)
+    v = v + 0.5 * (0.04 * v**2 + 5 * v + 140 - u + I)
+    u = u + a * (b * v - u)
+
+firings = np.array(firings)
+plt.plot(firings[:, 0], firings[:, 1], '.')
+plt.xlabel('Time (ms)')
+plt.ylabel('Neuron index')
+plt.show()
